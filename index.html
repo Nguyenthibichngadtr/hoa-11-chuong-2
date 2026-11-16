@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
+<title>Giải mật mã Hóa học</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#eff7f3;color:#15372f;font:16px/1.5 system-ui,sans-serif}main{margin:0}header,section{padding:clamp(18px,4vw,34px);border-radius:22px;margin-bottom:18px}header{background:#10483e;color:white}section{background:white;border:1px solid #d6e8df}h1,h2,p{margin:0 0 12px}h1{font-size:clamp(29px,5vw,46px)}h2{font-size:clamp(19px,3vw,24px)}small{color:#375f54}button,input{font:inherit;border-radius:10px;padding:11px 14px}button{cursor:pointer;border:1px solid #bed8ce;background:#eff8f4;color:#15372f;text-align:left}button.primary{background:#12634e;color:white;border-color:#12634e}button:disabled{cursor:default}input{width:min(100%,490px);border:1px solid #8eafa3}form{display:flex;gap:8px;flex-wrap:wrap}.choices{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin-bottom:14px}.correct{background:#c9f4d9;border-color:#30804f}.wrong{background:#ffe1dc;border-color:#b85748}#tiles{display:flex;gap:9px 14px;flex-wrap:wrap}.word{display:inline-flex;gap:3px}.tile{width:1.55em;text-align:center;border-bottom:2px solid #95b6a7;font-weight:750}.earned{background:#d4f5e2;color:#145640}.muted{color:#527067}[hidden]{display:none!important}
+
+#question{font-size:clamp(28px,3.8vw,36px);font-weight:750;line-height:1.25;overflow-wrap:anywhere;background:#d8cdf9;color:#35265d;border:1px solid #c4b3ed;border-radius:23px;padding:20px 22px;margin-bottom:16px}
+.choices{gap:12px}
+.choices button{--fill:#f6c6df;--edge:#dc9cbe;min-height:62px;padding:14px 17px;border:1px solid var(--edge);border-radius:18px;background:var(--fill);color:#25233c;font-weight:650;box-shadow:0 3px 0 var(--edge);transition:transform .15s,box-shadow .15s}
+.choices button:nth-child(2){--fill:#c5ddfa;--edge:#91b6e6}
+.choices button:nth-child(3){--fill:#f8dbad;--edge:#dcb677}
+.choices button:nth-child(4){--fill:#c9e6dc;--edge:#96c6b5}
+.choices button:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 5px 0 var(--edge)}
+.choices button:focus-visible{outline:3px solid #5d4695;outline-offset:3px}
+.choices button.correct{--fill:#a9e6bf;--edge:#40815b;color:#12492d}
+.choices button.wrong{--fill:#f5b6b8;--edge:#b7545d;color:#701f2a}
+.choices button.selected{outline:3px solid #675294;outline-offset:2px} #details article{border-bottom:1px solid #d6e8df;padding:14px 0} #details article:last-child{border-bottom:0} #details p{margin:6px 0}.tile.pending{background:#e9dffb;color:#35265d;border-radius:6px 6px 0 0}
+body{background:#edf9f7}
+header{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,32%);align-items:center;gap:22px;background:#5d9930;color:#102009}
+header #restart{background:#fff;border-color:#55ac9d;color:#104a46;font-weight:650}
+header #restart:hover{background:#e8fff5}
+.hero-art{position:relative;min-height:155px;isolation:isolate}
+.hero-art::before{content:'';position:absolute;inset:2% 9%;border-radius:50%;background:#ffffff48;z-index:-1}
+
+.lab-art{position:relative;width:200px;height:150px;margin:auto;filter:drop-shadow(0 6px 5px #23441655)}
+.lab-flask{position:absolute;right:4px;bottom:9px;width:104px;height:126px;background:#f1fffb;clip-path:polygon(34% 2%,66% 2%,66% 8%,61% 8%,61% 35%,96% 83%,99% 90%,96% 96%,88% 100%,12% 100%,4% 96%,1% 90%,4% 83%,39% 35%,39% 8%,34% 8%)}
+.lab-flask::before{content:'';position:absolute;inset:5px;background:linear-gradient(115deg,#ecfffb 5%,#a6ede7 58%,#d7fffa 90%);clip-path:polygon(41% 4%,59% 4%,59% 37%,97% 91%,90% 100%,10% 100%,3% 91%,41% 37%)}
+.lab-liquid{position:absolute;inset:60% 5% 5%;border-radius:50% 45% 15% 15% / 16% 16% 28% 28%;background:radial-gradient(circle at 38% 48%,#d7ffff 0 3px,transparent 4px),radial-gradient(circle at 58% 72%,#d7ffff 0 5px,transparent 6px),linear-gradient(#43dace,#099891)}
+.lab-tube{position:absolute;bottom:22px;width:26px;height:91px;border:3px solid #f0ffff;border-top:0;border-radius:0 0 16px 16px;background:linear-gradient(90deg,#ffffff95,transparent 55%),linear-gradient(to bottom,#b4eee86b 52%,var(--reagent) 53%)}
+.lab-tube::before{content:'';position:absolute;top:-3px;left:-5px;right:-5px;height:5px;border-radius:5px;background:#f0ffff}
+.lab-tube.one{left:18px;transform:rotate(-22deg);--reagent:#ffad63}
+.lab-tube.two{left:56px;bottom:12px;transform:rotate(-10deg);--reagent:#c5a2ff}
+.lab-spark{position:absolute;left:55px;top:5px;color:#fff0a3;font-size:25px}
+@media(max-width:560px){header{grid-template-columns:1fr;gap:8px}.hero-art{width:220px;min-height:125px;justify-self:center}}
+.tile.current{outline:2px solid #675294;outline-offset:2px;border-radius:4px}
+header h1{color:#fff0a3;font-family:"Nunito","Arial Rounded MT Bold","Comic Sans MS","Trebuchet MS",sans-serif;font-weight:900;line-height:1.18;letter-spacing:.01em;-webkit-text-stroke:1px #284519;paint-order:stroke fill;text-shadow:0 2px 0 #284519}
+input{padding:9px 12px;border:1px solid #55ac9d;border-radius:8px;font:inherit;max-width:100%} form{display:flex;flex-wrap:wrap;align-items:center;gap:10px} #guess{flex:1;min-width:min(230px,100%)}
+.choices button{font-size:clamp(24px,3.2vw,30px);line-height:1.3;overflow-wrap:anywhere}
+
+#next{display:flex;align-items:center;justify-content:center;gap:12px;margin:8px auto 4px;min-width:min(100%,190px);min-height:52px;padding:8px 20px;border:1px solid #237852;border-radius:999px;background:linear-gradient(130deg,#12634e,#24774b);box-shadow:0 4px 0 #0b4837;font-size:clamp(20px,3vw,24px);font-weight:750}
+#next::after{content:"";width:9px;height:9px;border-top:3px solid #fff0a3;border-right:3px solid #fff0a3;transform:rotate(45deg)}
+#next:focus-visible{outline:3px solid #675294;outline-offset:4px}
+#next:active{transform:translateY(2px);box-shadow:0 2px 0 #0b4837}
+#join{gap:12px}
+#join label{font-size:clamp(20px,2.5vw,24px);font-weight:700}
+#join #player{width:min(100%,320px);min-height:54px;font-size:22px}
+#join button{min-height:54px;font-size:20px}
+#feedback{font-size:clamp(22px,3vw,26px);font-weight:750;line-height:1.3;color:#12634e}
+main{width:100%;max-width:none;min-height:100dvh;padding:max(8px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))}
+header,section{padding:14px;margin-bottom:8px}
+header{display:block}
+.hero-art{display:none}
+#question{padding:12px;font-size:28px}
+#board{width:100%;padding-inline:clamp(8px,2vw,32px)}
+#board h2{font-size:clamp(24px,3.2vw,38px);margin-bottom:8px}
+#tiles{display:grid;gap:8px}
+.code-row{display:grid;gap:clamp(5px,1.3vw,20px)}
+.code-row:first-child{grid-template-columns:minmax(0,4fr) minmax(0,5fr) minmax(0,3fr)}
+.code-row:last-child{grid-template-columns:minmax(0,3fr) minmax(0,2fr) minmax(0,3fr) minmax(0,6fr)}
+.code-row .word{min-width:0;gap:clamp(2px,.5vw,8px)}
+.code-row .tile{flex:1 1 0;min-width:0;width:auto;font-size:clamp(20px,4.4vw,42px);line-height:1.25}
+#board #count{font-size:clamp(18px,2.6vw,24px);margin:8px 0 0}
+
+body{font-size:20px}
+header h1{font-size:34px;overflow-wrap:anywhere}
+header p,#progress,#save-status{font-size:22px}
+#progress,#board #count{font-weight:650}
+#board h2{font-size:28px}
+#board #count{font-size:22px}
+.code-row .tile{font-size:clamp(15px,5vw,24px)}
+#question{font-size:30px}
+.choices button,#feedback{font-size:26px}
+#join label,#join #player,#join button,#restart,#next{font-size:24px}
+#join #player::placeholder{font-size:20px}
+#score{font-size:28px;overflow-wrap:anywhere}
+#timer{position:sticky;top:max(8px,env(safe-area-inset-top));width:fit-content;margin:0 0 8px auto;padding:4px 12px;border-radius:12px;background:#12634e;color:white;font-size:24px;font-weight:750;font-variant-numeric:tabular-nums;z-index:1}
+#timer.urgent{background:#a12834}
+
+main{display:flex;flex-direction:column}
+@media (orientation:portrait), (max-width:600px){
+  header h1{font-size:clamp(35px,5.1vw,52px)}
+  header p,#progress,#board #count,#save-status{font-size:clamp(22px,3.2vw,34px)}
+  #board h2,#score,#timer{font-size:clamp(26px,4vw,40px)}
+  .code-row .tile{font-size:clamp(19px,3.3vw,32px)}
+  #question{font-size:clamp(31px,5vw,52px)}
+  .choices button,#feedback{font-size:clamp(27px,4.2vw,44px)}
+  #join label,#join #player,#join button,#restart,#next{font-size:clamp(25px,3.8vw,38px)}
+  #quiz{flex:1;display:flex;flex-direction:column}
+  #choices{flex:1;grid-auto-rows:minmax(min-content,1fr);gap:clamp(10px,1.6vh,26px)}
+  .choices button{min-height:clamp(64px,9vh,160px)}
+  #next{flex-shrink:0}
+}
+</style>
+<main>
+<header><div><h1>Giải mật mã Hóa học</h1><p>Phiếu học tập số 2 · Sulfur và sulfuric acid. Trả lời 15 câu để thu thập chữ cái và đoán thông điệp.</p><button id="restart" type="button" hidden>Lượt chơi mới</button></div><div class="hero-art" aria-hidden="true"><div class="lab-art"><span class="lab-tube one"></span><span class="lab-tube two"></span><span class="lab-flask"><span class="lab-liquid"></span></span><span class="lab-spark">✦</span></div></div></header>
+<section id="login"><form id="join"><label for="player">Họ và tên học sinh</label> <input id="player" placeholder="Ví dụ: Nguyễn Minh Anh" autofocus required maxlength="80" autocomplete="off"> <button class="primary">Vào chơi</button></form></section>
+<section id="board" aria-label="Bảng mật mã" hidden><h2>Bảng mật mã</h2><div id="tiles"></div><p id="count"></p></section>
+<section id="quiz" hidden><div id="timer" role="timer" aria-label="Thời gian còn lại"></div><p class="muted" id="progress"></p><h2 id="question"></h2><div class="choices" id="choices"></div><p id="feedback" role="status"></p><button class="primary" id="next" hidden>Tiếp theo</button></section>
+<section id="review" hidden><h2 id="score" tabindex="-1"></h2><p id="save-status" role="status"></p></section>
+</main>
+<script>
+const bank = [
+  [
+    "Số oxi hóa cao nhất của nguyên tử sulfur (S) trong hợp chất là",
+    [
+      "-1.",
+      "+4.",
+      "+6.",
+      "-2."
+    ],
+    2,
+    "Sulfur đạt số oxi hóa +6, chẳng hạn trong H₂SO₄."
+  ],
+  [
+    "Ở điều kiện thường, sulfur tồn tại ở dạng tinh thể, được tạo nên từ các phân tử sulfur. Số nguyên tử trong mỗi phân tử sulfur là",
+    [
+      "2.",
+      "4.",
+      "6.",
+      "8."
+    ],
+    3,
+    "Mỗi phân tử sulfur trong tinh thể ở điều kiện thường gồm tám nguyên tử (S₈)."
+  ],
+  [
+    "Sulfur đóng vai trò chất khử khi tác dụng với đơn chất nào sau đây?",
+    [
+      "Fe.",
+      "O₂.",
+      "H₂.",
+      "Hg."
+    ],
+    1,
+    "Khi tạo SO₂, số oxi hóa của sulfur tăng từ 0 lên +4."
+  ],
+  [
+    "Khi nhiệt kế thủy ngân vỡ, rắc chất bột nào sau đây lên thủy ngân rơi vãi sẽ chuyển hóa chúng thành hợp chất bền, ít độc hại?",
+    [
+      "Than đá.",
+      "Đá vôi.",
+      "Muối ăn.",
+      "Sulfur."
+    ],
+    3,
+    "Sulfur kết hợp với thủy ngân tạo thành HgS."
+  ],
+  [
+    "Sulfur dioxide thuộc loại oxide nào sau đây?",
+    [
+      "Acidic oxide.",
+      "Basic oxide.",
+      "Oxide trung tính.",
+      "Oxide lưỡng tính."
+    ],
+    0,
+    "SO₂ là oxide acid, có thể phản ứng với dung dịch base tạo muối."
+  ],
+  [
+    "Sulfur dioxide là chất khử trong phản ứng nào sau đây? ",
+    [
+      "SO₂ + NaOH → NaHSO₃",
+      "SO₂ + 2H₂S → 3S + 2H₂O",
+      "SO₂ + NO₂ → SO₃ + NO",
+      "SO₂ + 2KOH → K₂SO₃ + H₂O"
+    ],
+    2,
+    "Trong phản ứng với NO₂, số oxi hóa của sulfur tăng từ +4 lên +6."
+  ],
+  [
+    "Khí Y làm đục nước vôi trong và được dùng làm chất tẩy trắng bột gỗ trong công nghiệp giấy, khử màu trong sản xuất đường, chống nấm mốc cho sản phẩm mây tre đan,... Chất Y là",
+    [
+      "CO₂.",
+      "O₃.",
+      "NH₃.",
+      "SO₂."
+    ],
+    3,
+    "Các ứng dụng nêu trong câu là của sulfur dioxide (SO₂)."
+  ],
+  [
+    "Cho sulfur lần lượt phản ứng với các chất sau ở điều kiện thích hợp: hydrogen, oxygen, Mercury, Aluminium, Fluorine. Số phản ứng mà sulfur là chất oxi hóa là",
+    [
+      "1.",
+      "2.",
+      "3.",
+      "4."
+    ],
+    2,
+    "Sulfur bị khử khi phản ứng với H₂, Hg và Al."
+  ],
+  [
+    "Bước sơ cứu đầu tiên cần làm ngay khi một người bị bỏng sulfuric acid là",
+    [
+      "Rửa với nước lạnh nhiều lần",
+      "Trung hòa acid bằng NaHCO₃",
+      "Băng bó tạm thời vết bỏng",
+      "Đưa đến cơ sở y tế gần nhất"
+    ],
+    0,
+    "Phương án A là lựa chọn phù hợp trong phiếu học tập."
+  ],
+  [
+    "Muốn pha loãng dung dịch H₂SO₄ đặc, cần phải làm thế nào?",
+    [
+      "Rót từ từ dung dịch acid đặc vào nước.",
+      "Rót nước thật nhanh vào dung dịch acid đặc.",
+      "Rót từ từ nước vào dung dịch acid đặc.",
+      "Rót nhanh dung dịch acid đặc vào nước."
+    ],
+    0,
+    "Phương án A là lựa chọn phù hợp trong phiếu học tập."
+  ],
+  [
+    "Kim loại nào sau đây không tác dụng với dung dịch H₂SO₄ loãng ?",
+    [
+      "Ag",
+      "Mg",
+      "Na",
+      "Ca"
+    ],
+    0,
+    "Ag đứng sau hydrogen trong dãy hoạt động hóa học."
+  ],
+  [
+    "Dung dịch sulfuric acid đặc khác dung dịch sulfuric acid loãng ở tính chất hóa học nào?",
+    [
+      "Tính base mạnh.",
+      "Tính oxi hóa mạnh.",
+      "Tính acid mạnh.",
+      "Tính khử mạnh."
+    ],
+    1,
+    "H₂SO₄ đặc có tính oxi hóa mạnh."
+  ],
+  [
+    "Oxide nào sau đây khi tác dụng với acid H₂SO₄ đặc, nóng có thể giải phóng khí SO₂ ?",
+    [
+      "Fe₂O₃",
+      "Al₂O₃",
+      "FeO",
+      "ZnO"
+    ],
+    2,
+    "Fe(II) trong FeO bị oxi hóa lên Fe(III), còn sulfur trong acid bị khử xuống +4."
+  ],
+  [
+    "Để phân biệt hai acid H₂SO₄ loãng và acid HCl có thể dùng chất nào sau đây?",
+    [
+      "NaNO₃",
+      "Na₂CO₃",
+      "BaCl₂",
+      "MgCl₂"
+    ],
+    2,
+    "Ion Ba²⁺ tạo kết tủa trắng BaSO₄ với ion sulfate."
+  ],
+  [
+    "Hiện tượng xảy ra khi cho Cu tác dụng với H₂SO₄ đặc nóng dư là",
+    [
+      "Cu tan hết, dung dịch thu được có màu xanh, không có khí thoát ra.",
+      "Cu không tan hết, dung dịch thu được có màu xanh, có khí thoát ra.",
+      "Cu tan hết, dung dịch thu được có màu xanh, có khí mùi hắc thoát ra.",
+      "Cu tan hết, dung dịch thu được có màu xanh, có khí không mùi thoát ra."
+    ],
+    2,
+    "Cu tạo dung dịch CuSO₄ màu xanh và giải phóng khí SO₂ có mùi hắc."
+  ]
+];
+const message = 'CUNG CHUNG TAY BAO VE MOI TRUONG';
+const get = id => document.getElementById(id);
+let deck = [], index, earned, responses;
+const code = message.replaceAll(' ', '');
+const letters = [...new Set(code)];
+const positions = [...Array(code.length).keys()];
+let previous = {questions: [], keyword: ''};
+try { previous = JSON.parse(localStorage.getItem('phieu2-luot-choi')) || previous; } catch {}
+function shuffle(items) {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+function drawTiles() {
+  let slot = 0;
+  const words = message.split(' ').map(word => {
+    const group = document.createElement('span');
+    group.className = 'word';
+    for (const letter of word) {
+      const tile = document.createElement('span');
+      const position = slot++;
+      const found = earned.has(position);
+      const preview = get('quiz').hidden ? undefined : responses.find(response => response.slot === position)?.letter;
+      tile.className = found ? 'tile earned' : preview ? 'tile pending' : 'tile';
+      tile.textContent = found ? letter : (preview ?? '·');
+      if (!get('quiz').hidden && position === deck[index][3]) tile.classList.add('current');
+      tile.title = 'Ô ' + (position + 1);
+      group.append(tile);
+    }
+    return group;
+  });
+  const rows = [words.slice(0, 3), words.slice(3)].map(groups => {
+    const row = document.createElement('div');
+    row.className = 'code-row';
+    row.append(...groups);
+    return row;
+  });
+  get('tiles').replaceChildren(...rows);
+  get('count').textContent = get('quiz').hidden ? 'Chữ cái thu được: ' + earned.size + '/' + deck.length : 'Chữ cái đã chọn: ' + responses.length + '/' + deck.length;
+}
+function showQuestion() {
+  const [prompt, answers, correct, slot] = deck[index];
+  drawTiles();
+  get('progress').textContent = 'Câu ' + (index + 1) + '/' + deck.length + ' · Ô mật mã số ' + (slot + 1);
+  get('question').textContent = prompt;
+  get('feedback').textContent = '';
+  get('next').hidden = true;
+  const reward = message.replaceAll(' ', '')[slot];
+  const decoys = shuffle(letters.filter(letter => letter !== reward)).slice(0, 3);
+  const labels = answers.map((_, i) => i === correct ? reward : decoys.shift());
+  const buttons = shuffle(answers.map((_, i) => i)).map(answer => {
+    const button = document.createElement('button');
+    button.textContent = labels[answer] + '. ' + answers[answer];
+    button.setAttribute('aria-pressed', 'false');
+    button.onclick = () => {
+      if (!deadline || Date.now() >= deadline) { finish(true); return; }
+      responses[index] = {answer, labels, slot, letter: labels[answer]};
+      drawTiles();
+      for (const choice of buttons) {
+        choice.classList.toggle('selected', choice === button);
+        choice.setAttribute('aria-pressed', String(choice === button));
+      }
+      get('feedback').textContent = 'Đã chọn phương án ' + labels[answer] + '.';
+      get('next').textContent = index === deck.length - 1 ? 'Gửi điểm' : 'Tiếp theo';
+      get('next').hidden = false;
+    };
+    return button;
+  });
+  get('choices').replaceChildren(...buttons);
+}
+const resultsUrl = 'https://script.google.com/macros/s/AKfycbx1ckf-IUaIYZoZP5FUsRqqWiGXAJfhdp_uHBOFE3fSH2e4jQqeSY9rsdtf_QrSXoHCag/exec';
+const timeLimit = 8 * 60 * 1000;
+let deadline = 0, timerInterval;
+function stopTimer() {
+  clearInterval(timerInterval);
+  deadline = 0;
+}
+function updateTimer() {
+  const seconds = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+  const minutes = String(Math.floor(seconds / 60)).padStart(2, '0');
+  get('timer').textContent = minutes + ':' + String(seconds % 60).padStart(2, '0');
+  get('timer').classList.toggle('urgent', seconds <= 60);
+  if (seconds === 0) finish(true);
+}
+function start() {
+  stopTimer();
+  let picks, questionIds, slots, keyword;
+  do {
+    picks = shuffle(bank);
+    questionIds = picks.map(question => bank.indexOf(question));
+  } while (String(questionIds) === String(previous.questions));
+  do {
+    slots = shuffle(positions).slice(0, picks.length);
+    keyword = slots.map(slot => code[slot]).join('');
+  } while (keyword === previous.keyword);
+  previous = {questions: questionIds, keyword};
+  try { localStorage.setItem('phieu2-luot-choi', JSON.stringify(previous)); } catch {}
+  deck = picks.map(([prompt, options, answer, note], i) => [prompt, options, answer, slots[i], note]);
+  index = 0;
+  earned = new Set();
+  responses = [];
+  get('login').hidden = true;
+  get('board').hidden = false;
+  get('restart').hidden = false;
+  get('review').hidden = true;
+  get('quiz').hidden = false;
+  showQuestion();
+  deadline = Date.now() + timeLimit;
+  updateTimer();
+  timerInterval = setInterval(updateTimer, 250);
+}
+get('join').onsubmit = event => {
+  event.preventDefault();
+  if (!get('player').value.trim()) return;
+  start();
+  get('choices').firstElementChild.focus();
+};
+get('restart').onclick = () => {
+  stopTimer();
+  for (const id of ['board', 'quiz', 'review', 'restart']) get(id).hidden = true;
+  get('login').hidden = false;
+  get('join').reset();
+  get('player').focus();
+};
+get('next').onclick = () => {
+  if (!deadline || Date.now() >= deadline) { finish(true); return; }
+  if (++index < deck.length) {
+    showQuestion();
+    get('choices').firstElementChild.focus();
+  } else {
+    finish(false);
+  }
+};
+function finish(timedOut) {
+  if (!deadline) return;
+  const elapsedSeconds = Math.min(timeLimit / 1000,
+    Math.max(0, Math.ceil((Date.now() - deadline + timeLimit) / 1000)));
+  stopTimer();
+  for (const [, , , slot] of deck.filter((question, i) => responses[i]?.answer === question[2])) {
+    earned.add(slot);
+  }
+  const result = {
+    group: get('player').value.trim(),
+    correct: earned.size,
+    total: deck.length,
+    submittedAt: new Date().toISOString()
+  };
+  let status = 'Điểm đã được ghi trên thiết bị này.';
+  try {
+    const key = 'phieu2-ket-qua';
+    const results = JSON.parse(localStorage.getItem(key) || '[]');
+    results.push(result);
+    localStorage.setItem(key, JSON.stringify(results));
+  } catch {
+    status = 'Thiết bị không lưu được điểm.';
+  }
+  get('score').textContent = result.group + ' · ' + (Math.round(100 * result.correct / result.total) / 10).toLocaleString('vi-VN') + '/10 điểm';
+  const prefix = timedOut ? 'Đã hết 8 phút. ' : '';
+  get('save-status').textContent = prefix + 'Đang gửi điểm lên Google Sheets…';
+  const payload = {
+    hoTen: result.group,
+    tongSoCau: deck.length,
+    thoiGianGiay: elapsedSeconds,
+    soCauDung: result.correct,
+    cauSai: deck.flatMap((question, i) => {
+      const [ , answers, correct] = question;
+      const response = responses[i];
+      return response && response.answer !== correct
+        ? [{cauGoc: bank.findIndex(item => item[0] === question[0]) + 1, daChon: answers[response.answer]}]
+        : [];
+    })
+  };
+  sendResults(payload, prefix, status, deck);
+  get('review').hidden = false;
+  get('quiz').hidden = true;
+  get('score').focus();
+  drawTiles();
+}
+
+async function sendResults(payload, prefix, localStatus, submittedDeck) {
+  let message;
+  try {
+    const response = await fetch(resultsUrl, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    const receipt = await response.json();
+    if (!receipt.ok) {
+      message = (receipt.message || 'Google Sheets chưa xác nhận kết quả.') + ' ' + localStatus;
+    } else {
+      message = 'Đã lưu điểm vào Google Sheets.';
+      if (receipt.vinhDanhDaCapNhat === false) message += ' Bảng vinh danh chưa cập nhật.';
+    }
+  } catch {
+    message = 'Chưa xác nhận được điểm trên Google Sheets. ' + localStatus;
+  }
+  if (deck === submittedDeck && !get('review').hidden) {
+    get('save-status').textContent = prefix + message;
+  }
+}
+</script></html>
